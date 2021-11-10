@@ -1,6 +1,7 @@
 const express = require("express");
 const cors = require("cors")
 const { MongoClient } = require('mongodb');
+const ObjectId = require('mongodb').ObjectId;
 require('dotenv').config();
 
 const app = express();
@@ -9,7 +10,7 @@ app.use(express.json());
 
 const port = process.env.PORT || 5000;
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.ln5bf.mongodb.net/myFirstDatabase?retryWrites=true&w=majority`;
-console.log(uri)
+
 const client = new MongoClient(uri);
 
 async function run() {
@@ -17,6 +18,9 @@ async function run() {
     // Database Collections 
     const database = client.db("nicheProducts");
     const productCollection = database.collection("products");
+    const usersCollection = database.collection("users");
+    const orderCollection = database.collection("orders");
+    const reviewCollection = database.collection("reviews");
 
 
     // Get All Product API 
@@ -31,6 +35,65 @@ async function run() {
     finally {
         await client.close();
     }
+
+
+    // Get Single Product by Id 
+    try {
+        app.get('/product/:id', async (req, res) => {
+            await client.connect();
+            const id = req.params.id;
+            const query = { _id: ObjectId(id) };
+            const product = await productCollection.findOne(query);
+            res.send(product);
+        })
+    }
+    finally {
+        await client.close();
+    }
+
+
+    // Post an user api
+    try {
+        app.post('/user', async (req, res) => {
+            await client.connect();
+            const newUser = req.body;
+            const result = await usersCollection.insertOne(newUser);
+            res.json(result);
+        })
+    }
+    finally {
+        await client.close();
+    }
+
+    // Put an user api 
+    try {
+        app.put('/user', async (req, res) => {
+            await client.connect();
+            const user = req.body;
+            const filter = { email: user.email };
+            const options = { upsert: true };
+            const updateDoc = { $set: user };
+            const result = await usersCollection.updateOne(filter, updateDoc, options);
+            res.json(result);
+        })
+    }
+    finally {
+        await client.close();
+    }
+
+    // Post order api 
+    try {
+        app.post('/orders', async (req, res) => {
+            await client.connect();
+            const newOrder = req.body;
+            const result = await orderCollection.insertOne(newOrder);
+            res.json(result);
+        })
+    }
+    finally {
+        await client.close();
+    }
+
 }
 run().catch(console.dir);
 
