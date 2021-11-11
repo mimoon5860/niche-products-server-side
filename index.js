@@ -94,6 +94,75 @@ async function run() {
         await client.close();
     }
 
+
+    // Get order all-order/users-order 
+    try {
+        app.get('/orders', async (req, res) => {
+            await client.connect();
+            const email = req.query.email;
+            if (email) {
+                const query = {
+                    email: email
+                }
+                const order = await orderCollection.find(query).toArray();
+                res.send(order);
+            } else {
+                const cursor = orderCollection.find({});
+                const orders = await cursor.toArray();
+                res.send(orders);
+            }
+
+        })
+    }
+    finally {
+        await client.close();
+    }
+
+
+    // Admin Confirmation 
+    try {
+        app.get('/user/:email', async (req, res) => {
+            await client.connect();
+            const email = req.params.email;
+            const query = { email: email };
+            const user = await usersCollection.findOne(query);
+            let isAdmin = false;
+            if (user?.role === 'admin') {
+                isAdmin = true;
+            }
+            res.json({ admin: isAdmin });
+        })
+    }
+    finally {
+        await client.close();
+    }
+
+
+    // Make an Admin 
+    try {
+        app.put('/user/admin', async (req, res) => {
+            await client.connect();
+            const user = req.body;
+            const adminEmail = user.admin;
+            const newAdmin = user.newAdmin;
+            if (adminEmail) {
+                const admin = await usersCollection.findOne({ email: adminEmail });
+                if (admin?.role === 'admin') {
+                    const filter = { email: newAdmin };
+                    const updateDoc = { $set: { role: 'admin' } };
+                    const result = await usersCollection.updateOne(filter, updateDoc);
+                    res.json(result);
+                } else {
+                    res.status(403).json({ message: 'you do not have access to make admin' })
+                }
+            }
+
+        })
+    }
+    finally {
+        await client.close();
+    }
+
 }
 run().catch(console.dir);
 
