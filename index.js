@@ -118,6 +118,77 @@ async function run() {
         await client.close();
     }
 
+    // delete an order 
+    try {
+        app.delete("/orders/:id", async (req, res) => {
+            await client.connect();
+            const id = req.params.id;
+            const query = { _id: ObjectId(id) };
+            const result = await orderCollection.deleteOne(query);
+            res.json(result);
+        })
+    }
+    finally {
+        await client.close();
+    }
+
+    // Update order Status 
+    try {
+        app.put('/orders/:id', async (req, res) => {
+            const id = req.params.id;
+            const updateStatus = req.body;
+            console.log(id, updateStatus)
+            const filter = { _id: ObjectId(id) };
+            const updateDoc = {
+                $set: { status: updateStatus.status }
+            }
+            const result = await orderCollection.updateOne(filter, updateDoc);
+            res.json(result);
+        })
+    }
+    finally {
+        await client.close();
+    }
+
+    // post review data
+    try {
+        app.post('/reviews', async (req, res) => {
+            await client.connect();
+            const review = req.body;
+            const result = await reviewCollection.insertOne(review);
+            res.json(result);
+        })
+    }
+    finally {
+        await client.close();
+    }
+
+    // Get All review 
+    try {
+        app.get('/reviews', async (req, res) => {
+            await client.connect();
+            const cursor = reviewCollection.find({});
+            const reviews = await cursor.toArray();
+            res.send(reviews);
+        })
+    }
+    finally {
+        await client.close();
+    }
+
+    // Delete a review
+    try {
+        app.delete('/review/:id', async (req, res) => {
+            await client.connect();
+            const id = req.params.id;
+            const query = { _id: ObjectId(id) };
+            const result = await reviewCollection.deleteOne(query);
+            res.json(result);
+        })
+    }
+    finally {
+        await client.close();
+    }
 
     // Admin Confirmation 
     try {
@@ -165,7 +236,6 @@ async function run() {
 
 }
 run().catch(console.dir);
-
 
 
 
