@@ -52,6 +52,36 @@ async function run() {
     }
 
 
+    // Post a product 
+    try {
+        app.post('/product', async (req, res) => {
+            await client.connect();
+            const newProduct = req.body;
+            const result = await productCollection.insertOne(newProduct);
+            res.json(result);
+        })
+    }
+    finally {
+        await client.close();
+    }
+
+    // Delete a product
+    try {
+        app.delete("/product/:id", async (req, res) => {
+            await client.connect();
+            const id = req.params.id;
+            const query = { _id: ObjectId(id) };
+            const result = await productCollection.deleteOne(query);
+            res.json(result);
+        })
+    }
+    finally {
+        await client.close();
+    }
+
+
+
+
     // Post an user api
     try {
         app.post('/user', async (req, res) => {
